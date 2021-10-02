@@ -13,26 +13,43 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using PlatformService.Data;
+using PlatformService.Services.AsyncData;
 using PlatformService.Services.Http;
 
 namespace PlatformService
 {
   public class Startup
   {
-    public Startup(IConfiguration configuration)
+    public IConfiguration Configuration { get; }
+
+    private readonly IWebHostEnvironment _env;
+
+    public Startup(IConfiguration configuration, IWebHostEnvironment env)
     {
       Configuration = configuration;
+      _env = env;
     }
-
-    public IConfiguration Configuration { get; }
 
     // This method gets called by the runtime. Use this method to add services to the container.
     public void ConfigureServices(IServiceCollection services)
     {
-      services.AddDbContext<AppDbContext>(opt =>
-        opt.UseInMemoryDatabase("InMem"));
+      if (_env.IsProduction())
+      {
+        Console.WriteLine("--> Using MSSQL Db");
+        services.AddDbContext<AppDbContext>(opt =>
+          opt.UseSqlServer(Configuration.GetConnectionString("Platforms")));
+      }
+      else
+      {
+        Console.WriteLine("--> Using InMem Bd");
+        services.AddDbContext<AppDbContext>(opt =>
+          opt.UseInMemoryDatabase("InMem"));
+      }
+
 
       services.AddScoped<IPlatformRepo, PlatformRepo>();
+
+      services.AddSingleton<IMessageBusClient, MessageBusClient>();
 
       services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>();
 
@@ -58,7 +75,7 @@ namespace PlatformService
         app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "PlatformService v1"));
       }
 
-      app.UseHttpsRedirection();
+      // app.UseHttpsRedirection();
 
       app.UseRouting();
 
@@ -69,7 +86,7 @@ namespace PlatformService
         endpoints.MapControllers();
       });
 
-      PrepDb.PrepPopulation(app);
+      PrepDb.PrepPopulation(app, _env.IsProduction());
     }
   }
 }
