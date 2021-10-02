@@ -43,7 +43,7 @@ namespace CommandsService.Data
 
     public IEnumerable<Platform> GetAllPlatforms()
     {
-      return _context.Platforms.ToList().OrderBy(p => p.Name);
+      return _context.Platforms.ToList().OrderBy(p => p.Id);
     }
 
     public Command GetCommand(int platformId, int commandId)

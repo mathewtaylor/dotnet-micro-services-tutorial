@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using PlatformService.Data;
 using PlatformService.Services.AsyncData;
+using PlatformService.Services.Grpc;
 using PlatformService.Services.Http;
 
 namespace PlatformService
@@ -41,7 +44,7 @@ namespace PlatformService
       }
       else
       {
-        Console.WriteLine("--> Using InMem Bd");
+        Console.WriteLine("--> Using InMem Db");
         services.AddDbContext<AppDbContext>(opt =>
           opt.UseInMemoryDatabase("InMem"));
       }
@@ -50,6 +53,8 @@ namespace PlatformService
       services.AddScoped<IPlatformRepo, PlatformRepo>();
 
       services.AddSingleton<IMessageBusClient, MessageBusClient>();
+
+      services.AddGrpc();
 
       services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>();
 
@@ -84,6 +89,12 @@ namespace PlatformService
       app.UseEndpoints(endpoints =>
       {
         endpoints.MapControllers();
+        endpoints.MapGrpcService<GrpcPlatformService>();
+
+        endpoints.MapGet("/protos/platforms.proto", async context =>
+        {
+          await context.Response.WriteAsync(File.ReadAllText("Protos/platforms.proto"));
+        });
       });
 
       PrepDb.PrepPopulation(app, _env.IsProduction());

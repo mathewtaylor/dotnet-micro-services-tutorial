@@ -50,7 +50,7 @@ namespace CommandsService.EventProcessing
             repo.CreatePlatform(platform);
             repo.SaveChanges();
 
-            Console.WriteLine($"Platform added");
+            Console.WriteLine("Platform added");
           }
           else
           {
