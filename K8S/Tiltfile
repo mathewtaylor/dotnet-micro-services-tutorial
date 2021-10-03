@@ -2,7 +2,7 @@ print('Hello Tiltfile')
 
 k8s_yaml('platforms-deployment.yaml')
 k8s_yaml('commands-deployment.yaml')
-k8s_yaml('mssql-platform-deployment.yaml')
+k8s_yaml('mssql-deployment.yaml')
 k8s_yaml('rabbitmq-deployment.yaml')
 k8s_yaml('ingress-srv.yaml')
 k8s_yaml('local-pvc.yaml')
